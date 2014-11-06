@@ -1,0 +1,3 @@
+[submodule "FlowdockAPI"]
+	path = FlowdockAPI
+	url = https://github.com/ajorians/FlowdockAPI
