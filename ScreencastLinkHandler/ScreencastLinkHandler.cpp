@@ -60,24 +60,10 @@ bool HasItem(const std::vector<std::string>& arrstr, const std::string& str)
 	return false;
 }
 
-//HANDLER_EXTERN int FlowdockCreate(FlowdockAPI* api)
-//{
-//	*api = new Flowdock;
-//
-//	return 0;
-//}
-//
-//HANDLER_EXTERN int FlowdockFree(FlowdockAPI *api)
-//{
-//	Flowdock* pFlowdock = (Flowdock*)*api;
-//	delete pFlowdock;
-//	return 0;
-//}
-
-HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage)
+HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage)
 {
    IHandler* pIHandler = (IHandler*)pIFlowdockManager;
-   std::string strRoom(pstrRoom), strMessage(pstrMessage);
+   std::string strOrg(pstrOrg), strFlow(pstrFlow), strMessage(pstrMessage);
 
    if( ScreencastLinkHandler::HasSCLink(strMessage) )
    {
@@ -88,21 +74,11 @@ HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrR
 		   std::string strImg = sc.GetImageURL(arrstrLinks[i]);
 		   if( strImg.size() > 0 )
 		   {
-			   pIHandler->SayMessage(strRoom.c_str(), strImg.c_str());
+			   pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strImg.c_str());
 		   }
 	   }
    }
 
-   return 0;
-}
-
-HANDLER_EXTERN int HandlerTrelloAdjustment(void* pIFlowdockManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed)
-{
-   return 0;
-}
-
-HANDLER_EXTERN int HandlerTimeEvent(void* pIFlowdockManager, const char* pstrRoom)
-{
    return 0;
 }
 
