@@ -3,64 +3,65 @@
 #include <pthread.h>
 #include <vector>
 #include <string>
-#include "CampfireAPI.h"
+#include "FlowdockAPI.h"
 #include "HandlerAPI.h"
 #include "Library.h"
 
 class RLibrary;
 class IManager;
 
-struct CampfireLoginInfo
+struct FlowdockFlowInfo
 {
-   CampfireLoginInfo(const std::string& strRoom)
-      : m_strRoom(strRoom)
+   FlowdockFlowInfo(const std::string& strOrg, const std::string& strFlow)
+      : m_strOrg(strOrg), m_strFlow(strFlow)
    {}
-   CampfireLoginInfo(const CampfireLoginInfo& rhs)
+   FlowdockFlowInfo(const FlowdockFlowInfo& rhs)
    {
-      m_strRoom = rhs.m_strRoom;
+      m_strOrg = rhs.m_strOrg;
+      m_strFlow = rhs.m_strFlow;
    }
-   std::string m_strRoom;
+   std::string m_strOrg;
+   std::string m_strFlow;
 };
 
-class CampfireManager
+class FlowdockManager
 {
 public:
-   CampfireManager(IManager* pManager);
-   ~CampfireManager();
+   FlowdockManager(IManager* pManager);
+   ~FlowdockManager();
 
    //Commands
    void Exit();
-   bool JoinRoom(const std::string& strCamp, const std::string& strAuth, const std::string& strRoom, bool bSSL);
-   bool LeaveRoom(const std::string& strRoom);
-   bool Say(const std::string& strRoom, const std::string& strMessage);
-   bool Upload(const std::string& strRoom, const std::string& strFile, bool bDelete);
+   bool AddFlow(const std::string& strOrg, const std::string& strFlow);
+   bool Connect(const std::string& strUsername, const std::string& strPassword);
+   bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage);
+   bool Upload(const std::string& strRoom, const std::string& strFile);
    bool ChangeUpdateFrequency(int nMS);
 
    //Notify Commands
    /*void NotifySay(const std::string& strMessage);*/
 
-   std::vector<std::string> GetRoomList();
-
 public:
-   struct CampfireQueuedMessage
+   struct FlowdockQueuedMessage
    {
-      enum MessageType { SayMessage, UploadFile, RestartCamp, LeaveRoom };
+      enum MessageType { SayMessage, UploadFile, RestartCamp };
 
       MessageType m_eType;
       std::string m_strMessage;
-      std::string m_strRoom;
+      std::string m_strOrg;
+      std::string m_strFlow;
       std::string m_strUsername;
       std::string m_strPassword;
    };
 
 protected:
-   static void* CampfireManagerThread(void* ptr);
+   static void* FlowdockManagerThread(void* ptr);
    void DoWork();
 
    void DoQueuedMessages();
    void GetListenMessages();
 
-   bool Rejoin(const std::string& strCamp, const std::string& strAuth, const std::string& strRoom, bool bSSL);
+   bool Rejoin(const std::string& strUsername, const std::string& strPassword);
 
 protected:
    pthread_t m_thread;
@@ -71,11 +72,11 @@ protected:
 
    IManager* m_pManager;
 
-   std::vector<CampfireQueuedMessage> m_arrQueuedMessages;
+   std::vector<FlowdockQueuedMessage> m_arrQueuedMessages;
 
-   RLibrary m_libraryCampfire;
-   std::vector<CampfireAPI> m_arrCampfireInstances;
-   std::vector<CampfireLoginInfo> m_arrCampfireLoginInfo;
+   RLibrary m_libraryFlowdock;
+   FlowdockAPI m_FlowdockInstance;
+   std::vector<FlowdockFlowInfo> m_arrFlows;
 };
 
 

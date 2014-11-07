@@ -1,5 +1,5 @@
 #include "ConnectionManager.h"
-#include "CampfireManager.h"
+#include "FlowdockManager.h"
 #include "Paths.h"
 
 #include <iostream>
@@ -27,7 +27,7 @@ ConnectionManager::ConnectionManager()
 m_mutex(PTHREAD_MUTEX_INITIALIZER),
 m_mutexResponses(PTHREAD_MUTEX_INITIALIZER),
 #endif
-m_bExit(false), m_bDebugCampfireMessages(false)
+m_bExit(false), m_bDebugFlowdockMessages(false)
 {
 #ifndef WIN32
    pthread_mutex_init(&m_mutex, NULL);
@@ -36,7 +36,7 @@ m_bExit(false), m_bDebugCampfireMessages(false)
    int iRet;
    iRet = pthread_create( &m_thread, NULL, ConnectionManager::ConnectionManagerThread, (void*)this);
 
-   m_pCampfireManager = new CampfireManager(this);
+   m_pFlowdockManager = new FlowdockManager(this);
 }
 
 ConnectionManager::~ConnectionManager()
@@ -44,78 +44,28 @@ ConnectionManager::~ConnectionManager()
    Exit();
 }
 
-void ConnectionManager::SayMessage(const char* pstrRoom, const char* pstrMessage)
+void ConnectionManager::SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage)
 {
-   std::string strRoom(pstrRoom), strMessage(pstrMessage);
+   std::string strOrg(pstrOrg), strRoom(pstrRoom), strMessage(pstrMessage);
 
    QueuedMessage msg;
    msg.m_eType = QueuedMessage::SayMessage;
-   msg.m_strRoom = strRoom;
+   msg.m_strOrg = strOrg;
+   msg.m_strFlow = strRoom;
    msg.m_strMessage = strMessage;
 
    m_arrQueuedMessages.push_back(msg);
 }
 
-
-void ConnectionManager::RestartCampfire(const char* pstrRoom)
+void ConnectionManager::UploadMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrFile)
 {
-   std::string strRoom(pstrRoom);
-
-   QueuedMessage msg;
-   msg.m_eType = QueuedMessage::RestartCamp;
-   msg.m_strRoom = strRoom;
-
-   //IHandler methods assume m_mutex is already locked!
-   m_arrQueuedMessages.push_back(msg);
-}
-
-void ConnectionManager::TrelloSubscribe(const char* pstrRoom, const char* pstrBoard, const char* pstrToken)
-{
-   std::string strRoom(pstrRoom), strBoard(pstrBoard), strToken(pstrToken);
-
-   QueuedMessage msg;
-   msg.m_eType = QueuedMessage::TrelloSubscribe;
-   msg.m_strRoom = strRoom;
-   msg.m_strMessage = strBoard;
-   msg.m_strToken = strToken;
-
-   //IHandler methods assume m_mutex is already locked!
-   m_arrQueuedMessages.push_back(msg);
-
-   QueuedMessage msg2;
-   msg2.m_eType = QueuedMessage::SayMessage;
-   msg2.m_strMessage = "Subscribing to Trello board: " + strBoard;
-   m_arrQueuedMessages.push_back(msg2);
-}
-
-void ConnectionManager::TrelloUnSubscribe(const char* pstrRoom, const char* pstrBoard)
-{
-   std::string strRoom(pstrRoom), strBoard(pstrBoard);
-
-   QueuedMessage msg;
-   msg.m_eType = QueuedMessage::TrelloUnSubscribe;
-   msg.m_strRoom = strRoom;
-   msg.m_strMessage = strBoard;
-
-   //IHandler methods assume m_mutex is already locked!
-   m_arrQueuedMessages.push_back(msg);
-
-   QueuedMessage msg2;
-   msg2.m_eType = QueuedMessage::SayMessage;
-   msg2.m_strRoom = strRoom;
-   msg2.m_strMessage = "UnSubscribing from Trello board: " + strBoard;
-   m_arrQueuedMessages.push_back(msg2);
-}
-
-void ConnectionManager::UploadMessage(const char* pstrRoom, const char* pstrFile, bool bDelete)
-{
-   std::string strRoom(pstrRoom), strFile(pstrFile);
+   std::string strOrg(pstrOrg), strRoom(pstrRoom), strFile(pstrFile);
 
    QueuedMessage msg;
    msg.m_eType = QueuedMessage::UploadFile;
-   msg.m_strRoom = strRoom;
+   msg.m_strOrg = strOrg;
+   msg.m_strFlow = strRoom;
    msg.m_strMessage = strFile;
-   msg.m_nAmount = bDelete ? 1 : 0;
 
    m_arrQueuedMessages.push_back(msg);
 }
@@ -130,34 +80,24 @@ void ConnectionManager::MessageSaid(const std::string& strRoom, int nType, int n
 
    pthread_mutex_unlock( &m_mutex );
 
-   if( m_bDebugCampfireMessages )
+   if( m_bDebugFlowdockMessages )
    {
       pthread_mutex_lock(&m_mutexResponses);
-      std::string strCampfireMessage = "Camp: " + strMessage;
-      m_arrResponses.push_back(strCampfireMessage);
+      std::string strFlowdockMessage = "Camp: " + strMessage;
+      m_arrResponses.push_back(strFlowdockMessage);
       pthread_mutex_unlock(&m_mutexResponses);
    }
-}
-
-void ConnectionManager::TelloUpdate(const std::string& strRoom, const std::string& strName, const std::string& strListBefore, const std::string& strListAfter, const std::string& strDescription, bool bCreated, bool bClosed)
-{
-   //called from a different thread
-   pthread_mutex_lock( &m_mutex );
-
-   NotifyHandlers(strRoom, strName, strListBefore, strListAfter, strDescription, bCreated, bClosed);
-
-   pthread_mutex_unlock( &m_mutex );
 }
 
 void ConnectionManager::Exit()
 {
    pthread_mutex_lock( &m_mutex );
 
-   if( m_pCampfireManager )
+   if( m_pFlowdockManager )
    {
-      m_pCampfireManager->Exit();
-      delete m_pCampfireManager;
-      m_pCampfireManager= NULL;
+      m_pFlowdockManager->Exit();
+      delete m_pFlowdockManager;
+      m_pFlowdockManager= NULL;
    }
 
    m_bExit = true;
@@ -187,11 +127,11 @@ bool ConnectionManager::ListChatHandlers()
 
 void ConnectionManager::ToggleDebugMessages()
 {
-   m_bDebugCampfireMessages = !m_bDebugCampfireMessages;
+   m_bDebugFlowdockMessages = !m_bDebugFlowdockMessages;
 
    pthread_mutex_lock( &m_mutexResponses );
    std::string strMsg = "Debug is ";
-   if( m_bDebugCampfireMessages )
+   if( m_bDebugFlowdockMessages )
    {
       strMsg += "ON";
    }
@@ -203,29 +143,34 @@ void ConnectionManager::ToggleDebugMessages()
    pthread_mutex_unlock( &m_mutexResponses );
 }
 
-bool ConnectionManager::JoinRoom(const std::string& strCamp, const std::string& strAuth, const std::string& strRoom, bool bSSL)
+bool ConnectionManager::JoinRoom(const std::string& strOrg, const std::string& strFlow)
+{
+   QueuedMessage msg;
+   msg.m_eType = QueuedMessage::JoinRoom;
+   msg.m_strOrg = strOrg;
+   msg.m_strFlow = strFlow;
+
+   pthread_mutex_lock( &m_mutex );
+   m_arrQueuedMessages.push_back(msg);
+   pthread_mutex_unlock( &m_mutex );
+
+   return true;
+}
+
+bool ConnectionManager::Connect(const std::string& strUsername, const std::string& strPassword)
 {
    bool bOK = false;
 
-   bOK = Rejoin(strCamp, strAuth, strRoom, bSSL);
+   bOK = Rejoin(strUsername, strPassword);
 
    return bOK;
 }
 
-bool ConnectionManager::LeaveRoom(const std::string& strRoom)
-{
-   bool bOK = false;
-
-   bOK = Leave(strRoom);
-
-   return bOK;
-}
-
-bool ConnectionManager::Say(const std::string& strRoom, const std::string& strMessage)
+bool ConnectionManager::Say(const std::string& strOrg, const std::string& strRoom, const std::string& strMessage)
 {
    pthread_mutex_lock( &m_mutex );
 
-   SayMessage(strRoom.c_str(), strMessage.c_str());
+   SayMessage(strOrg.c_str(), strRoom.c_str(), strMessage.c_str());
    pthread_mutex_unlock( &m_mutex );
 
    return true;
@@ -242,22 +187,6 @@ bool ConnectionManager::ChangeUpdateFrequency(int nMS)
    pthread_mutex_unlock( &m_mutex );
 
    return true;
-}
-
-bool ConnectionManager::StartTrelloUpdate(const std::string& strRoom)
-{
-   QueuedMessage msg;
-   msg.m_eType = QueuedMessage::RestartTrello;
-   msg.m_strRoom = strRoom;
-   msg.strRoom = "501ffde81e3dd9d81413ea3d";//"504f354d4289bab413347dac";
-   msg.m_strToken = "4d9e17de6229f0ff8e225eba644e5fb240f2bb4e867967ce7443b629c560de42";
-
-   pthread_mutex_lock( &m_mutex );
-   m_arrQueuedMessages.push_back(msg);
-   pthread_mutex_unlock( &m_mutex );
-
-   return true;
-
 }
 
 bool ConnectionManager::GetResponce(std::string& strResponse)
@@ -306,12 +235,6 @@ void ConnectionManager::DoWork()
       DoQueuedMessages();
       pthread_mutex_unlock( &m_mutex );
 
-      std::vector<std::string> arrRooms = m_pCampfireManager->GetRoomList();
-
-      pthread_mutex_lock( &m_mutex );
-      DoTimedEvents(arrRooms);
-      pthread_mutex_unlock( &m_mutex );
-
       pthread_mutex_lock( &m_mutex );
       DoQueuedMessages();
       pthread_mutex_unlock( &m_mutex );
@@ -337,25 +260,25 @@ void ConnectionManager::DoQueuedMessages()
    {
       QueuedMessage msg = m_arrQueuedMessages[0];
 
-      if( msg.m_eType == QueuedMessage::RestartCamp )
+      if( msg.m_eType == QueuedMessage::JoinRoom )
       {
-         m_pCampfireManager->JoinRoom(msg.strCamp, msg.strUsername, msg.strRoom, msg.bSSL);
+         m_pFlowdockManager->AddFlow(msg.m_strOrg, msg.m_strFlow);
       }
-      else if( msg.m_eType == QueuedMessage::LeaveRoom )
+      else if( msg.m_eType == QueuedMessage::RestartCamp )
       {
-         m_pCampfireManager->LeaveRoom(msg.strRoom);
+         m_pFlowdockManager->Connect(msg.strUsername, msg.strPassword);
       }
       else if( msg.m_eType == QueuedMessage::SayMessage )
       {
-         m_pCampfireManager->Say(msg.m_strRoom, msg.m_strMessage);
+         m_pFlowdockManager->Say(msg.m_strOrg, msg.m_strFlow, msg.m_strMessage);
       }
       else if( msg.m_eType == QueuedMessage::UploadFile )
       {
-         m_pCampfireManager->Upload(msg.m_strRoom, msg.m_strMessage, msg.m_nAmount == 1 ? true : false);
+         m_pFlowdockManager->Upload(msg.m_strFlow, msg.m_strMessage);
       }
       else if( msg.m_eType == QueuedMessage::AdjustUpdateFrequency )
       {
-         m_pCampfireManager->ChangeUpdateFrequency(msg.m_nAmount);
+         m_pFlowdockManager->ChangeUpdateFrequency(msg.m_nAmount);
       }
       else if( msg.m_eType == QueuedMessage::ListHandlers )
       {
@@ -435,42 +358,12 @@ void ConnectionManager::DoQueuedMessages()
    }
 }
 
-void ConnectionManager::DoTimedEvents(const std::vector<std::string>& arrRooms)
-{
-   for(std::vector<RLibrary*>::size_type i = 0; i<m_arrChatHandlers.size(); i++)
-   {
-      HandlerTimeEventFunc TimeEvent = (HandlerTimeEventFunc)m_arrChatHandlers[i]->Resolve("HandlerTimeEvent");
-      if( !TimeEvent )
-         continue;
-
-      for(std::vector<std::string>::size_type j=0; j<arrRooms.size(); j++)
-      {
-         TimeEvent(this, arrRooms[j].c_str());
-      }
-   }
-}
-
-bool ConnectionManager::Rejoin(const std::string& strCamp, const std::string& strAuth, const std::string& strRoom, bool bSSL)
+bool ConnectionManager::Rejoin(const std::string& strUsername, const std::string& strPassword)
 {
    QueuedMessage msg;
    msg.m_eType = QueuedMessage::RestartCamp;
-   msg.strCamp = strCamp;
-   msg.strUsername = strAuth;
-   msg.strRoom = strRoom;
-   msg.bSSL = bSSL;
-
-   pthread_mutex_lock( &m_mutex );
-   m_arrQueuedMessages.push_back(msg);
-   pthread_mutex_unlock( &m_mutex );
-
-   return true;
-}
-
-bool ConnectionManager::Leave(const std::string& strRoom)
-{
-   QueuedMessage msg;
-   msg.m_eType = QueuedMessage::LeaveRoom;
-   msg.strRoom = strRoom;
+   msg.strUsername = strUsername;
+   msg.strPassword = strPassword;
 
    pthread_mutex_lock( &m_mutex );
    m_arrQueuedMessages.push_back(msg);
@@ -490,19 +383,5 @@ void ConnectionManager::NotifyHandlers(const std::string& strRoom, int nType, in
       Said(this, strRoom.c_str(), nType, nUserID, strMessage.c_str());
    }
 }
-
-void ConnectionManager::NotifyHandlers(const std::string& strRoom, const std::string& strName, const std::string& strListBefore, const std::string& strListAfter, const std::string& strDescription, bool bCreated, bool bClosed)
-{
-   for(std::vector<RLibrary*>::size_type i = 0; i<m_arrChatHandlers.size(); i++)
-   {
-      HandlerTrelloAdjustmentFunc Adjust = (HandlerTrelloAdjustmentFunc)m_arrChatHandlers[i]->Resolve("HandlerTrelloAdjustment");
-      if( !Adjust )
-         continue;
-
-      Adjust(this, strRoom.c_str(), strName.c_str(), strListBefore.c_str(), strListAfter.c_str(), strDescription.c_str(), bCreated ? 1 : 0, bClosed ? 1 : 0);
-   }
-}
-
-
 
 

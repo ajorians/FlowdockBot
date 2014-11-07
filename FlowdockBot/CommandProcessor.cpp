@@ -104,18 +104,12 @@ void CommandProcessor::Run()
       else if( IsJoinCommand(strCommand) )
       {
          string strRoomName = Trim(strCommand.substr(4));
-
-         //cout << "Joining room..." << endl;
-         m_pConnectionManager->JoinRoom(CAMPFIRE_CAMP, CAMPFIRE_AUTH, strRoomName, CAMPFIRE_USESSL);
+         m_pConnectionManager->JoinRoom(Flowdock_ORG, strRoomName);
       }
 
-      else if( IsLeaveCommand(strCommand) )
+      else if( IsConnectCommand(strCommand) )
       {
-         string strRoomName = Trim(strCommand.substr(5));
-
-         //cout << "Joining room..." << endl;
-         m_pConnectionManager->LeaveRoom(strRoomName);
-         //m_pConnectionManager->JoinRoom("camtasiaslate", "build_bot@yahoo.com", "a3.1415926", "CS 8 Room", true);
+         m_pConnectionManager->Connect(Flowdock_USERNAME, Flowdock_PASSWORD);
       }
 
       else if( IsSayCommand(strCommand) )
@@ -129,7 +123,7 @@ void CommandProcessor::Run()
          string strRoom = Trim(strMessage.substr(0, nPos));
          strMessage = Trim(strMessage.substr(nPos+1));
 
-         m_pConnectionManager->Say(strRoom, strMessage);
+         m_pConnectionManager->Say(Flowdock_ORG, strRoom, strMessage);
       }
 
 #ifndef _WIN32
@@ -173,9 +167,9 @@ bool CommandProcessor::IsJoinCommand(const std::string& strCommand) const
    return ToLower(strCommand).find("join") == 0;
 }
 
-bool CommandProcessor::IsLeaveCommand(const std::string& strCommand) const
+bool CommandProcessor::IsConnectCommand(const std::string& strCommand) const
 {
-   return ToLower(strCommand).find("leave") == 0;
+   return ToLower(strCommand).find("connect") == 0;
 }
 
 bool CommandProcessor::IsSayCommand(const std::string& strCommand) const
@@ -192,14 +186,14 @@ std::string CommandProcessor::ToLower(const std::string& strCommand)
 
 void CommandProcessor::DisplayHelp()
 {
-   cout << "******CampfireBot******" << endl;
+   cout << "******FlowdockBot******" << endl;
    cout << "Available commands:" << endl;
    cout << "Help - This help" << endl;
    cout << "Reload - Reloads the chat handlers" << endl;
    cout << "ListHandlers - Lists the chat handlers" << endl;
    cout << "DebugMessages - Toggle displaying messages" << endl;
-   cout << "Join <RoomName> - Joins a campfire room" << endl;
-   cout << "Leave <RoomName> - Leaves a campfire room" << endl;
+   cout << "Join <RoomName> - Adds a room to join to" << endl;
+   cout << "Connect - Connect to the rooms" << endl;
    cout << "Say <RoomName>;<text> - Say something" << endl;
    cout << "Exit - Closes the program" << endl;
 }

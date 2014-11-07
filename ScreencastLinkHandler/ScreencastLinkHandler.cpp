@@ -60,23 +60,23 @@ bool HasItem(const std::vector<std::string>& arrstr, const std::string& str)
 	return false;
 }
 
-//HANDLER_EXTERN int CampfireCreate(CampfireAPI* api)
+//HANDLER_EXTERN int FlowdockCreate(FlowdockAPI* api)
 //{
-//	*api = new Campfire;
+//	*api = new Flowdock;
 //
 //	return 0;
 //}
 //
-//HANDLER_EXTERN int CampfireFree(CampfireAPI *api)
+//HANDLER_EXTERN int FlowdockFree(FlowdockAPI *api)
 //{
-//	Campfire* pCampfire = (Campfire*)*api;
-//	delete pCampfire;
+//	Flowdock* pFlowdock = (Flowdock*)*api;
+//	delete pFlowdock;
 //	return 0;
 //}
 
-HANDLER_EXTERN int HandlerMessageSaid(void* pICampfireManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage)
+HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage)
 {
-   IHandler* pIHandler = (IHandler*)pICampfireManager;
+   IHandler* pIHandler = (IHandler*)pIFlowdockManager;
    std::string strRoom(pstrRoom), strMessage(pstrMessage);
 
    if( ScreencastLinkHandler::HasSCLink(strMessage) )
@@ -96,12 +96,12 @@ HANDLER_EXTERN int HandlerMessageSaid(void* pICampfireManager, const char* pstrR
    return 0;
 }
 
-HANDLER_EXTERN int HandlerTrelloAdjustment(void* pICampfireManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed)
+HANDLER_EXTERN int HandlerTrelloAdjustment(void* pIFlowdockManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed)
 {
    return 0;
 }
 
-HANDLER_EXTERN int HandlerTimeEvent(void* pICampfireManager, const char* pstrRoom)
+HANDLER_EXTERN int HandlerTimeEvent(void* pIFlowdockManager, const char* pstrRoom)
 {
    return 0;
 }

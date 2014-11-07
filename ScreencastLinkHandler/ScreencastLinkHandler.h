@@ -1,5 +1,5 @@
-#ifndef CAMPFIREBOT_VSIDHANDLER_H
-#define CAMPFIREBOT_VSIDHANDLER_H
+#ifndef FlowdockBOT_VSIDHANDLER_H
+#define FlowdockBOT_VSIDHANDLER_H
 
 #include <curl/curl.h>
 #include "HandlerAPI.h"

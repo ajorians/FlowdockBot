@@ -17,7 +17,7 @@ protected:
    bool IsListHandersCommand(const std::string& strCommand) const;
    bool IsDebugMessagesCommand(const std::string& strCommand) const;
    bool IsJoinCommand(const std::string& strCommand) const;
-   bool IsLeaveCommand(const std::string& strCommand) const;
+   bool IsConnectCommand(const std::string& strCommand) const;
    bool IsSayCommand(const std::string& strCommand) const;
 
    static std::string ToLower(const std::string& strCommand);

@@ -1,4 +1,4 @@
-#include "CampfireManager.h"
+#include "FlowdockManager.h"
 #include "ConnectionManager.h"
 #include <iostream>
 #include "Paths.h"
@@ -21,9 +21,9 @@
 #endif
 
 #ifdef WIN32
-#define CAMPFIRE_MODULE "CampfireAPI.dll"
+#define Flowdock_MODULE "FlowdockAPI.dll"
 #else
-#define CAMPFIRE_MODULE "libCampfireAPI.so"
+#define Flowdock_MODULE "libFlowdockAPI.so"
 #endif
 
 void Replace(std::string& s, const std::string& strToReplace, const std::string& strToReplaceWith)
@@ -48,32 +48,32 @@ std::string URLEncode(const std::string str)
    return strReturn;
 }
 
-CampfireManager::CampfireManager(IManager* pManager)
+FlowdockManager::FlowdockManager(IManager* pManager)
 : 
 #ifdef WIN32
 m_mutex(PTHREAD_MUTEX_INITIALIZER),
 #endif
- m_libraryCampfire(GetSelfDirectory() + CAMPFIRE_MODULE
-), m_pManager(pManager), m_bExit(false), m_nCurrentWaitTime(5000)
+ m_libraryFlowdock(GetSelfDirectory() + Flowdock_MODULE
+), m_pManager(pManager), m_bExit(false), m_nCurrentWaitTime(5000), m_FlowdockInstance(NULL)
 {
 #ifndef WIN32
    pthread_mutex_init(&m_mutex, NULL);
 #endif
-   if( !m_libraryCampfire.Load() )
+   if( !m_libraryFlowdock.Load() )
    {
-      std::cout << "Couldn't load CampfireAPI" << std::endl;
+      std::cout << "Couldn't load FlowdockAPI" << std::endl;
       return;
    }
    int iRet;
-   iRet = pthread_create( &m_thread, NULL, CampfireManager::CampfireManagerThread, (void*)this);
+   iRet = pthread_create( &m_thread, NULL, FlowdockManager::FlowdockManagerThread, (void*)this);
 }
 
-CampfireManager::~CampfireManager()
+FlowdockManager::~FlowdockManager()
 {
    Exit();
 }
 
-void CampfireManager::Exit()
+void FlowdockManager::Exit()
 {
    pthread_mutex_lock( &m_mutex );
    m_bExit = true;
@@ -81,57 +81,17 @@ void CampfireManager::Exit()
 
    pthread_join( m_thread, NULL);
 
-   for(std::vector<CampfireAPI>::size_type i=m_arrCampfireInstances.size(); i-->0; )
-   {
-      CampfireAPI pCampfire = m_arrCampfireInstances[i];
-      CampfireLeaveFunc Leave = (CampfireLeaveFunc)m_libraryCampfire.Resolve("CampfireLeave");
-      if( Leave )
-         Leave(pCampfire);
-
-      CampfireFreeFunc FreeAPI = (CampfireFreeFunc)m_libraryCampfire.Resolve("CampfireFree");
-      if( FreeAPI )
-         FreeAPI(&pCampfire);
-
-      m_arrCampfireInstances.erase(m_arrCampfireInstances.begin() + i);
-      m_arrCampfireLoginInfo.erase(m_arrCampfireLoginInfo.begin() + i);
-   }
+   FlowdockFreeFunc FreeAPI = (FlowdockFreeFunc)m_libraryFlowdock.Resolve("FlowdockFree");
+   if( FreeAPI )
+      FreeAPI(&m_FlowdockInstance);
 }
 
-bool CampfireManager::JoinRoom(const std::string& strCamp, const std::string& strAuth, const std::string& strRoom, bool bSSL)
+bool FlowdockManager::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
 {
-   bool bOK = false;
-
-   CampfireQueuedMessage msg;
-   msg.m_eType = CampfireQueuedMessage::RestartCamp;
-   msg.m_strRoom = strRoom;
-
-   pthread_mutex_lock( &m_mutex );
-   m_arrQueuedMessages.push_back(msg);
-   pthread_mutex_unlock( &m_mutex );
-
-   return bOK;
-}
-
-bool CampfireManager::LeaveRoom(const std::string& strRoom)
-{
-   bool bOK = false;
-
-   CampfireQueuedMessage msg;
-   msg.m_eType = CampfireQueuedMessage::LeaveRoom;
-   msg.m_strRoom = strRoom;
-
-   pthread_mutex_lock( &m_mutex );
-   m_arrQueuedMessages.push_back(msg);
-   pthread_mutex_unlock( &m_mutex );
-
-   return bOK;
-}
-
-bool CampfireManager::Say(const std::string& strRoom, const std::string& strMessage)
-{
-   CampfireQueuedMessage msg;
-   msg.m_eType = CampfireQueuedMessage::SayMessage;
-   msg.m_strRoom = strRoom;
+   FlowdockQueuedMessage msg;
+   msg.m_eType = FlowdockQueuedMessage::SayMessage;
+   msg.m_strOrg = strOrg;
+   msg.m_strFlow = strFlow;
    msg.m_strMessage = strMessage;
 
    pthread_mutex_lock( &m_mutex );
@@ -141,14 +101,12 @@ bool CampfireManager::Say(const std::string& strRoom, const std::string& strMess
    return true;
 }
 
-bool CampfireManager::Upload(const std::string& strRoom, const std::string& strFile, bool bDelete)
+bool FlowdockManager::Upload(const std::string& strRoom, const std::string& strFile)
 {
-   CampfireQueuedMessage msg;
-   msg.m_eType = CampfireQueuedMessage::UploadFile;
-   msg.m_strRoom = strRoom;
+   FlowdockQueuedMessage msg;
+   msg.m_eType = FlowdockQueuedMessage::UploadFile;
+   msg.m_strFlow = strRoom;
    msg.m_strMessage = strFile;
-   if( bDelete )
-      msg.m_strPassword = "Delete";
 
    pthread_mutex_lock( &m_mutex );
    m_arrQueuedMessages.push_back(msg);
@@ -157,7 +115,7 @@ bool CampfireManager::Upload(const std::string& strRoom, const std::string& strF
    return true;
 }
 
-bool CampfireManager::ChangeUpdateFrequency(int nMS)
+bool FlowdockManager::ChangeUpdateFrequency(int nMS)
 {
    pthread_mutex_lock( &m_mutex );
    m_nCurrentWaitTime = nMS;
@@ -166,29 +124,15 @@ bool CampfireManager::ChangeUpdateFrequency(int nMS)
    return true;
 }
 
-std::vector<std::string> CampfireManager::GetRoomList()
+void* FlowdockManager::FlowdockManagerThread(void* ptr)
 {
-   std::vector<std::string> arrstrRooms;
-
-   pthread_mutex_lock( &m_mutex );
-   for(std::vector<CampfireLoginInfo>::size_type i=0; i<m_arrCampfireLoginInfo.size(); i++)
-   {
-      arrstrRooms.push_back(m_arrCampfireLoginInfo[i].m_strRoom);
-   }
-   pthread_mutex_unlock( &m_mutex );
-
-   return arrstrRooms;
-}
-
-void* CampfireManager::CampfireManagerThread(void* ptr)
-{
-   CampfireManager* pThis = (CampfireManager*)ptr;
+   FlowdockManager* pThis = (FlowdockManager*)ptr;
    pThis->DoWork();
 
    return NULL;
 }
 
-void CampfireManager::DoWork()
+void FlowdockManager::DoWork()
 {
    while(true)
    {
@@ -217,104 +161,40 @@ void CampfireManager::DoWork()
    }
 }
 
-void CampfireManager::DoQueuedMessages()
+void FlowdockManager::DoQueuedMessages()
 {
    while( m_arrQueuedMessages.size() > 0 )
    {
-      CampfireQueuedMessage msg = m_arrQueuedMessages[0];
+      FlowdockQueuedMessage msg = m_arrQueuedMessages[0];
 
-      if( msg.m_eType == CampfireQueuedMessage::SayMessage )
+      if( msg.m_eType == FlowdockQueuedMessage::SayMessage )
       {
-         if( m_arrCampfireInstances.size() >= 1 )
+         FlowdockSayOrgFlowMessageFunc Say = (FlowdockSayOrgFlowMessageFunc)m_libraryFlowdock.Resolve("FlowdockSayOrgFlowMessage");
+         if( Say )
          {
-            CampfireSayFunc Say = (CampfireSayFunc)m_libraryCampfire.Resolve("CampfireSay");
-            if( Say )
-            {
-               std::string strTemp = URLEncode(msg.m_strMessage);
-               int nMessageID = -1;
-               for(std::vector<CampfireAPI>::size_type i=0; i<m_arrCampfireInstances.size(); i++)
-               {
-                  if( m_arrCampfireLoginInfo[i].m_strRoom != msg.m_strRoom )
-                     continue;
-
-                  Say(m_arrCampfireInstances[i], strTemp.c_str(), nMessageID);
-               }
-            }
+            std::string strTemp = URLEncode(msg.m_strMessage);
+            int nMessageID = -1;
+            Say(m_FlowdockInstance, msg.m_strOrg.c_str(), msg.m_strFlow.c_str(), strTemp.c_str());
          }
       }
-      else if( msg.m_eType == CampfireQueuedMessage::UploadFile )
+      else if( msg.m_eType == FlowdockQueuedMessage::UploadFile )
       {
-         if( m_arrCampfireInstances.size() >= 1 )
+         FlowdockUploadFileFunc Upload = (FlowdockUploadFileFunc)m_libraryFlowdock.Resolve("FlowdockUploadFile");
+         if( Upload )
          {
-            CampfireUploadFileFunc Upload = (CampfireUploadFileFunc)m_libraryCampfire.Resolve("CampfireUploadFile");
-            if( Upload )
-            {
-               std::string strFile = msg.m_strMessage;
-               int nMessageID = -1;
-               for(std::vector<CampfireAPI>::size_type i=0; i<m_arrCampfireInstances.size(); i++)
-               {
-                  if( m_arrCampfireLoginInfo[i].m_strRoom != msg.m_strRoom )
-                     continue;
+            std::string strFile = msg.m_strMessage;
+            int nMessageID = -1;
 
-                  Upload(m_arrCampfireInstances[i], strFile.c_str());
-
-                  if( msg.m_strPassword == "Delete" )
-                  {
-#ifdef _WIN32
-                     DeleteFileA(strFile.c_str());
-#else
-                     unlink(strFile.c_str());
-#endif
-                  }
-               }
-            }
+            //Upload(m_arrFlowdockInstances[i], strFile.c_str());
          }
       }
-      else if( msg.m_eType == CampfireQueuedMessage::RestartCamp )
+      else if( msg.m_eType == FlowdockQueuedMessage::RestartCamp )
       {
-         if( m_arrCampfireInstances.size() > 0 )
-         {
-            for(std::vector<CampfireAPI>::size_type i=0; i<m_arrCampfireInstances.size(); i++)
-            {
-               CampfireAPI pCampfire = m_arrCampfireInstances[i];
-               CampfireLoginInfo loginInfo = m_arrCampfireLoginInfo[i];
+         FlowdockFreeFunc FreeAPI = (FlowdockFreeFunc)m_libraryFlowdock.Resolve("FlowdockFree");
+         if( FreeAPI )
+            FreeAPI(&m_FlowdockInstance);
 
-               if( loginInfo.m_strRoom != msg.m_strRoom )
-                  continue;
-
-               m_arrCampfireInstances.erase(m_arrCampfireInstances.begin() + i);
-               m_arrCampfireLoginInfo.erase(m_arrCampfireLoginInfo.begin() + i);
-               CampfireFreeFunc FreeAPI = (CampfireFreeFunc)m_libraryCampfire.Resolve("CampfireFree");
-               if( FreeAPI )
-                  FreeAPI(&pCampfire);
-            }
-         }
-
-         Rejoin(CAMPFIRE_CAMP, CAMPFIRE_AUTH, msg.m_strRoom, CAMPFIRE_USESSL);
-      }
-      else if( msg.m_eType == CampfireQueuedMessage::LeaveRoom )
-      {
-         if( m_arrCampfireInstances.size() > 0 )
-         {
-            for(std::vector<CampfireAPI>::size_type i=0; i<m_arrCampfireInstances.size(); i++)
-            {
-               CampfireAPI pCampfire = m_arrCampfireInstances[i];
-               CampfireLoginInfo loginInfo = m_arrCampfireLoginInfo[i];
-
-               if( loginInfo.m_strRoom != msg.m_strRoom )
-                  continue;
-
-               CampfireLeaveFunc Leave = (CampfireLeaveFunc)m_libraryCampfire.Resolve("CampfireLeave");
-               if( Leave )
-                  Leave(pCampfire);
-
-               m_arrCampfireInstances.erase(m_arrCampfireInstances.begin() + i);
-               m_arrCampfireLoginInfo.erase(m_arrCampfireLoginInfo.begin() + i);
-               CampfireFreeFunc FreeAPI = (CampfireFreeFunc)m_libraryCampfire.Resolve("CampfireFree");
-               if( FreeAPI )
-                  FreeAPI(&pCampfire);
-            }
-         }
+         //Rejoin(Flowdock_CAMP, Flowdock_AUTH, msg.m_strRoom, Flowdock_USESSL);
       }
       else
       {
@@ -325,100 +205,74 @@ void CampfireManager::DoQueuedMessages()
    }
 }
 
-void CampfireManager::GetListenMessages()
+void FlowdockManager::GetListenMessages()
 {
-   CampfireGetListenMessageFunc GetListenMessage = (CampfireGetListenMessageFunc)m_libraryCampfire.Resolve("CampfireGetListenMessage");
-
-   if( m_arrCampfireInstances.size() <= 0 )
+   if( m_FlowdockInstance == NULL )
       return;
 
-   for(std::vector<CampfireAPI>::size_type j=0; j<m_arrCampfireInstances.size(); j++)
+   FlowdockGetListenMessageCountFunc GetMessagesCount = (FlowdockGetListenMessageCountFunc)m_libraryFlowdock.Resolve("FlowdockGetListenMessageCount");
+   FlowdockGetListenMessageTypeFunc GetMessageType = (FlowdockGetListenMessageTypeFunc)m_libraryFlowdock.Resolve("FlowdockGetListenMessageType");
+   FlowdockGetMessageContentFunc GetMessageContent = (FlowdockGetMessageContentFunc)m_libraryFlowdock.Resolve("FlowdockGetMessageContent");
+   FlowdockRemoveListenMessageFunc RemoveMessage = (FlowdockRemoveListenMessageFunc)m_libraryFlowdock.Resolve("FlowdockRemoveListenMessage");
+
+   while(GetMessagesCount(m_FlowdockInstance) > 0 )
    {
-      CampfireAPI pCampfire = m_arrCampfireInstances[j];
+      if( GetMessageType(m_FlowdockInstance, 0) == 0 ) {
+         char strBuffer[1024*100];
+         int nSizeOfMessage = 1024*100;
 
-      char strBuffer[1024*100];
-      int nSizeOfMessage = 1024*100;
-      if( 1 == GetListenMessage(pCampfire, strBuffer, nSizeOfMessage) )
-      {
-         int nType = 0;
-         int nUserID = 0;
+         if( 1 == GetMessageContent(m_FlowdockInstance, 0, strBuffer, nSizeOfMessage) )
+         {
+            int nType = 0;
+            int nUserID = 0;
 
-         m_pManager->MessageSaid(m_arrCampfireLoginInfo[j].m_strRoom, nType, nUserID, strBuffer);
+            m_pManager->MessageSaid("Room", 0/*type*/, 0/*userid*/, strBuffer);
+         }
       }
+
+      RemoveMessage(m_FlowdockInstance, 0);
    }
 }
 
-bool CampfireManager::Rejoin(const std::string& strCamp, const std::string& strAuth, const std::string& strRoom, bool bSSL)
+bool FlowdockManager::AddFlow(const std::string& strOrg, const std::string& strFlow)
 {
-   //std::cout << "Rejoin called" << std::endl;
+   m_arrFlows.push_back(FlowdockFlowInfo(strOrg, strFlow));
+   return true;
+}
+
+bool FlowdockManager::Connect(const std::string& strUsername, const std::string& strPassword)
+{
+   return Rejoin(strUsername, strPassword);
+}
+
+bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& strPassword)
+{
    bool bOK = false;
 
-   CampfireCreateFunc CreateAPI = (CampfireCreateFunc)m_libraryCampfire.Resolve("CampfireCreate");
-   CampfireAPI pCampfire = NULL;
+   FlowdockCreateFunc CreateAPI = (FlowdockCreateFunc)m_libraryFlowdock.Resolve("FlowdockCreate");
+   FlowdockAPI pFlowdock = NULL;
 
-   CampfireLoginFunc Login = (CampfireLoginFunc)m_libraryCampfire.Resolve("CampfireLogin");
-   CampfireRoomsCountFunc GetRoomCount = (CampfireRoomsCountFunc)m_libraryCampfire.Resolve("CampfireRoomsCount");
-   CampfireGetRoomNameIDFunc GetRoomName = (CampfireGetRoomNameIDFunc)m_libraryCampfire.Resolve("CampfireGetRoomNameID");
-   CampfireJoinRoomFunc JoinRoom = (CampfireJoinRoomFunc)m_libraryCampfire.Resolve("CampfireJoinRoom");
-   CampfireListenFunc Listen = (CampfireListenFunc)m_libraryCampfire.Resolve("CampfireListen");
-   bool bLoggedOn = false;
-   int nRoomCount = -1; 
-   int nRoomNum = 0;
+   FlowdockSetUsernamePasswordFunc SetDefaults = (FlowdockSetUsernamePasswordFunc)m_libraryFlowdock.Resolve("FlowdockSetUsernamePassword");
+   if( !SetDefaults )
+      goto Exit;
+
+   FlowdockStartListeningDefaultsFunc Listen = (FlowdockStartListeningDefaultsFunc)m_libraryFlowdock.Resolve("FlowdockStartListeningDefaults");
+   FlowdockAddListenFlowFunc AddListen = (FlowdockAddListenFlowFunc)m_libraryFlowdock.Resolve("FlowdockAddListenFlow");
 
    if( !CreateAPI )
       goto Exit;
 
-   CreateAPI(&pCampfire);
+   CreateAPI(&pFlowdock);
 
-   if( !Login )
-      goto Exit;
+   SetDefaults(pFlowdock, strUsername.c_str(), strPassword.c_str());
 
-   bLoggedOn = Login(pCampfire, strCamp.c_str(), strAuth.c_str(), bSSL) == 1;
-
-   if( !GetRoomCount )
-      goto Exit;
-
-   GetRoomCount(pCampfire, nRoomCount);
-
-   if( !GetRoomName )
-      goto Exit;
-
-   for(nRoomNum=0; nRoomNum<nRoomCount; nRoomNum++)
-   {
-      char * pstrRoomName;
-      pstrRoomName = NULL;
-      int nRoomID = 0;
-
-      int nSizeOfRoomName = 0, nSizeOfRoomURL = 0;
-      GetRoomName(pCampfire, nRoomNum, pstrRoomName, nSizeOfRoomName, nRoomID);
-
-      pstrRoomName = new char[nSizeOfRoomName + 1];
-
-      GetRoomName(pCampfire, nRoomNum, pstrRoomName, nSizeOfRoomName, nRoomID);
-
-      std::string strRoomName(pstrRoomName);
-
-      delete[] pstrRoomName;
-
-      if( strRoomName == strRoom )
-         break;
+   for(std::vector<FlowdockFlowInfo>::size_type i=0; i<m_arrFlows.size(); i++) {
+      AddListen(pFlowdock, m_arrFlows[i].m_strOrg.c_str(), m_arrFlows[i].m_strFlow.c_str());
    }
 
-   if( nRoomNum >= nRoomCount )
-   {
-      std::cout << "Room not found" << std::endl;
-      goto Exit;
-   }
+   Listen(pFlowdock);
 
-   if( !JoinRoom )
-      goto Exit;
-
-   JoinRoom(pCampfire, nRoomNum);
-
-   Listen(pCampfire);
-
-   m_arrCampfireInstances.push_back(pCampfire);
-   m_arrCampfireLoginInfo.push_back(CampfireLoginInfo(strRoom));
+   m_FlowdockInstance = pFlowdock;
 
    bOK = true;
 

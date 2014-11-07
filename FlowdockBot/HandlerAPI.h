@@ -1,16 +1,13 @@
-#ifndef CAMPFIREBOT_HANDLERAPI_H
-#define CAMPFIREBOT_HANDLERAPI_H
+#ifndef FlowdockBOT_HANDLERAPI_H
+#define FlowdockBOT_HANDLERAPI_H
 
 #include <string>
 
 class IHandler
 {
 public:
-   virtual void SayMessage(const char* pstrRoom, const char* pstrMessage) = 0;
-   virtual void RestartCampfire(const char* pstrRoom)                   = 0;
-   virtual void TrelloSubscribe(const char* pstrRoom, const char* pstrBoard, const char* pstrToken)   = 0;
-   virtual void TrelloUnSubscribe(const char* pstrRoom, const char* pstrBoard) = 0;
-   virtual void UploadMessage(const char* pstrRoom, const char* pstrFile, bool bDelete) = 0;
+   virtual void SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage) = 0;
+   virtual void UploadMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrFile) = 0;
 };
 
 #ifdef WIN32
@@ -19,16 +16,16 @@ public:
 #define HANDLER_EXTERN extern "C"
 #endif
 
-//typedef int (*HandlerCreateFunc)(CampfireAPI* api);
-//typedef int (*HandlerFreeFunc)(CampfireAPI* api);
-typedef int (*HandlerMessageSaidFunc)(void* pICampfireManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage);
-typedef int (*HandlerTrelloAdjustmentFunc)(void* pICampfireManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed);
-typedef int (*HandlerTimeEventFunc)(void* pICampfireManager, const char* pstrRoom);
+//typedef int (*HandlerCreateFunc)(FlowdockAPI* api);
+//typedef int (*HandlerFreeFunc)(FlowdockAPI* api);
+typedef int (*HandlerMessageSaidFunc)(void* pIFlowdockManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage);
+typedef int (*HandlerTrelloAdjustmentFunc)(void* pIFlowdockManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed);
+typedef int (*HandlerTimeEventFunc)(void* pIFlowdockManager, const char* pstrRoom);
 
-//HANDLER_EXTERN int CampfireCreate(CampfireAPI* api);
-//HANDLER_EXTERN int CampfireFree(CampfireAPI* api);
-HANDLER_EXTERN int HandlerMessageSaid(void* pICampfireManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage);
-HANDLER_EXTERN int HandlerTrelloAdjustment(void* pICampfireManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed);
-HANDLER_EXTERN int HandlerTimeEvent(void* pICampfireManager, const char* pstrRoom);
+//HANDLER_EXTERN int FlowdockCreate(FlowdockAPI* api);
+//HANDLER_EXTERN int FlowdockFree(FlowdockAPI* api);
+HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage);
+HANDLER_EXTERN int HandlerTrelloAdjustment(void* pIFlowdockManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed);
+HANDLER_EXTERN int HandlerTimeEvent(void* pIFlowdockManager, const char* pstrRoom);
 
 #endif

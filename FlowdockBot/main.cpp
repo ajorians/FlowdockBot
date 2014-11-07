@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-   cout << "Starting up CampfireBot" << endl;
+   cout << "Starting up FlowdockBot" << endl;
 
    {
       ConnectionManager connections;
@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
       CommandProcessor(&connections).Run();
    }
 
-   cout << "Exiting CampfireBot" << endl;
+   cout << "Exiting FlowdockBot" << endl;
 
 	return 0;
 }
