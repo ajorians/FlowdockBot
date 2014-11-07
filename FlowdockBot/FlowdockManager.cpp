@@ -83,7 +83,10 @@ void FlowdockManager::Exit()
 
    FlowdockFreeFunc FreeAPI = (FlowdockFreeFunc)m_libraryFlowdock.Resolve("FlowdockFree");
    if( FreeAPI )
+   {
       FreeAPI(&m_FlowdockInstance);
+      m_FlowdockInstance = NULL;
+   }
 }
 
 bool FlowdockManager::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
@@ -226,7 +229,7 @@ void FlowdockManager::GetListenMessages()
             int nType = 0;
             int nUserID = 0;
 
-            m_pManager->MessageSaid("Room", 0/*type*/, 0/*userid*/, strBuffer);
+            m_pManager->MessageSaid("Org", "Room", 0/*type*/, 0/*userid*/, strBuffer);
          }
       }
 

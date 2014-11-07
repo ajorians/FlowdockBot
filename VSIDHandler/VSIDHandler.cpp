@@ -43,42 +43,17 @@ std::string UnEscapeXML(const std::string str)
    return strReturn;
 }
 
-//HANDLER_EXTERN int FlowdockCreate(FlowdockAPI* api)
-//{
-//	*api = new Flowdock;
-//
-//	return 0;
-//}
-//
-//HANDLER_EXTERN int FlowdockFree(FlowdockAPI *api)
-//{
-//	Flowdock* pFlowdock = (Flowdock*)*api;
-//	delete pFlowdock;
-//	return 0;
-//}
-
-HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrRoom, int nType, int nUserID, const char* pstrMessage)
+HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage)
 {
    IHandler* pIHandler = (IHandler*)pIFlowdockManager;
-   std::string strMessage(pstrMessage), strRoom(pstrRoom);
+   std::string strMessage(pstrMessage), strOrg(pstrOrg), strFlow(pstrFlow);
 
    if( VSIDHandler::HasVSID(strMessage) )
    {
       VSIDHandler vsid(pIHandler);
-      vsid.PostResponseMessage(strRoom, strMessage);
-
+      vsid.PostResponseMessage(strOrg, strFlow, strMessage);
    }
 
-   return 0;
-}
-
-HANDLER_EXTERN int HandlerTrelloAdjustment(void* pIFlowdockManager, const char* pstrRoom, const char* pstrCard, const char* strListBefore, const char* strListAfter, const char* strDescription, int nCreated, int nClosed)
-{
-   return 0;
-}
-
-HANDLER_EXTERN int HandlerTimeEvent(void* pIFlowdockManager, const char* pstrRoom)
-{
    return 0;
 }
 
@@ -138,7 +113,7 @@ bool VSIDHandler::HasVSID(const std::string& strMessage)
    return VSIDsFromMessage(strMessage).size() > 0;
 }
 
-void VSIDHandler::PostResponseMessage(const std::string& strRoom, const std::string& strMessage)
+void VSIDHandler::PostResponseMessage(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
 {
    std::vector<int> arrVSIDs = VSIDsFromMessage(strMessage);
    if( arrVSIDs.size() <= 0 )
@@ -149,7 +124,7 @@ void VSIDHandler::PostResponseMessage(const std::string& strRoom, const std::str
       std::string strResponse = GetResponseForVSID(arrVSIDs[i]);
 
       if( strResponse.length() > 0 )
-         m_pIHandler->SayMessage(strRoom.c_str(), strResponse.c_str());
+         m_pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strResponse.c_str());
    }
 }
 
