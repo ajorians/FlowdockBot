@@ -32,7 +32,7 @@ TARGET_LINK_LIBRARIES(ScreencastLinkHandler curl ${OSSPECIFIC_LIBRARIES})
 
 INCLUDE_DIRECTORIES( ${PROJECT_BINARY_DIR} )
 INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR} )
-INCLUDE_DIRECTORIES(ScreencastLinkHandler .. ../CampfireAPI/curl-7.19.2/include )
+INCLUDE_DIRECTORIES(ScreencastLinkHandler .. ../FlowdockAPI/curl-7.19.2/include )
 
 IF(WIN32)
    SET_TARGET_PROPERTIES(ScreencastLinkHandler PROPERTIES COMPILE_FLAGS /Zc:wchar_t-)
