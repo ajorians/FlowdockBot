@@ -6,7 +6,7 @@
 class IHandler
 {
 public:
-   virtual void SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage) = 0;
+   virtual void SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage, const char* pstrTags) = 0;
    virtual void UploadMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrFile) = 0;
 };
 
