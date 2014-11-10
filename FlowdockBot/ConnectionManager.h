@@ -35,7 +35,7 @@ public:
    ~ConnectionManager();
 
    //IHandler
-   void SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage);
+   void SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage, const char* pstrTags);
    void UploadMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrFile);
 
    //IManager
@@ -62,6 +62,8 @@ public:
       std::string m_strOrg;
       std::string m_strFlow;
       std::string m_strMessage;
+      std::string m_strTags;
+      std::string m_strExternalUser;
 
       std::string strUsername;
       std::string strPassword;

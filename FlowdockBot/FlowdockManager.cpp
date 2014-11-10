@@ -89,13 +89,15 @@ void FlowdockManager::Exit()
    }
 }
 
-bool FlowdockManager::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
+bool FlowdockManager::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, const std::string& strTags, const std::string& strExternalUser)
 {
    FlowdockQueuedMessage msg;
    msg.m_eType = FlowdockQueuedMessage::SayMessage;
    msg.m_strOrg = strOrg;
    msg.m_strFlow = strFlow;
    msg.m_strMessage = strMessage;
+   msg.m_strTags = strTags;
+   msg.m_strExternalUser = strExternalUser;
 
    pthread_mutex_lock( &m_mutex );
    m_arrQueuedMessages.push_back(msg);
@@ -177,7 +179,7 @@ void FlowdockManager::DoQueuedMessages()
          {
             std::string strTemp = URLEncode(msg.m_strMessage);
             int nMessageID = -1;
-            Say(m_FlowdockInstance, msg.m_strOrg.c_str(), msg.m_strFlow.c_str(), strTemp.c_str());
+            Say(m_FlowdockInstance, msg.m_strOrg.c_str(), msg.m_strFlow.c_str(), strTemp.c_str(), msg.m_strTags.c_str(), msg.m_strExternalUser.c_str());
          }
       }
       else if( msg.m_eType == FlowdockQueuedMessage::UploadFile )
@@ -221,10 +223,13 @@ void FlowdockManager::GetListenMessages()
    while(GetMessagesCount(m_FlowdockInstance) > 0 )
    {
       if( GetMessageType(m_FlowdockInstance, 0) == 0 ) {
-         char strBuffer[1024*100];
-         int nSizeOfMessage = 1024*100;
+         char* pstrBuffer = NULL;
+         int nSizeOfMessage = 0;
 
-         if( 1 == GetMessageContent(m_FlowdockInstance, 0, strBuffer, nSizeOfMessage) )
+         GetMessageContent(m_FlowdockInstance, 0, pstrBuffer, nSizeOfMessage);
+         pstrBuffer = new char[nSizeOfMessage+1];
+
+         if( 1 == GetMessageContent(m_FlowdockInstance, 0, pstrBuffer, nSizeOfMessage) )
          {
             int nType = 0;
             int nUserID = 0;
@@ -252,8 +257,10 @@ void FlowdockManager::GetListenMessages()
 
             delete pstrFlow;
 
-            m_pManager->MessageSaid(Flowdock_ORG, strFlowName, 0/*type*/, 0/*userid*/, strBuffer);
+            m_pManager->MessageSaid(Flowdock_ORG, strFlowName, 0/*type*/, 0/*userid*/, pstrBuffer);
          }
+
+         delete[] pstrBuffer;
       }
 
       RemoveMessage(m_FlowdockInstance, 0);
