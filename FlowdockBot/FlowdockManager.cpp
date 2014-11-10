@@ -229,7 +229,30 @@ void FlowdockManager::GetListenMessages()
             int nType = 0;
             int nUserID = 0;
 
-            m_pManager->MessageSaid("Org", "Room", 0/*type*/, 0/*userid*/, strBuffer);
+            char* pstrFlow = NULL;
+            int nSizeOfFlow = 0;
+            FlowdockGetMessageFlowFunc GetFlow = (FlowdockGetMessageFlowFunc)m_libraryFlowdock.Resolve("FlowdockGetMessageFlow");
+            GetFlow(m_FlowdockInstance, 0, pstrFlow, nSizeOfFlow);
+
+            pstrFlow = new char[nSizeOfFlow + 1];
+
+            GetFlow(m_FlowdockInstance, 0, pstrFlow, nSizeOfFlow);
+
+            FlowdockGetFlowByIDFunc GetFlowName = (FlowdockGetFlowByIDFunc)m_libraryFlowdock.Resolve("FlowdockGetFlowByID");
+            char* pstrFlowName = NULL;
+            int nSizeOfFlowName = 0;
+            GetFlowName(m_FlowdockInstance, pstrFlow, pstrFlowName, nSizeOfFlowName);
+
+            pstrFlowName = new char[nSizeOfFlowName + 1];
+
+            GetFlowName(m_FlowdockInstance, pstrFlow, pstrFlowName, nSizeOfFlowName);
+
+            std::string strFlowName(pstrFlowName);
+            delete pstrFlowName;
+
+            delete pstrFlow;
+
+            m_pManager->MessageSaid(Flowdock_ORG, strFlowName, 0/*type*/, 0/*userid*/, strBuffer);
          }
       }
 
@@ -269,8 +292,21 @@ bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& 
 
    SetDefaults(pFlowdock, strUsername.c_str(), strPassword.c_str());
 
+   FlowdockGetFlowsFunc GetFlows = (FlowdockGetFlowsFunc)m_libraryFlowdock.Resolve("FlowdockGetFlows");
+   if( !GetFlows )
+      goto Exit;
+
+   GetFlows(pFlowdock, strUsername.c_str(), strPassword.c_str());
+
    for(std::vector<FlowdockFlowInfo>::size_type i=0; i<m_arrFlows.size(); i++) {
       AddListen(pFlowdock, m_arrFlows[i].m_strOrg.c_str(), m_arrFlows[i].m_strFlow.c_str());
+
+      //TODO: Can we make this better?
+      FlowdockGetUsersFunc GetUsers = (FlowdockGetUsersFunc)m_libraryFlowdock.Resolve("FlowdockGetUsers");
+      if( !GetUsers )
+         goto Exit;
+
+      GetUsers(pFlowdock, m_arrFlows[i].m_strOrg.c_str(), m_arrFlows[i].m_strFlow.c_str(), strUsername.c_str(), strPassword.c_str());
    }
 
    Listen(pFlowdock);
