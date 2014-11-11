@@ -286,22 +286,28 @@ bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& 
    FlowdockAPI pFlowdock = NULL;
 
    FlowdockSetUsernamePasswordFunc SetDefaults = (FlowdockSetUsernamePasswordFunc)m_libraryFlowdock.Resolve("FlowdockSetUsernamePassword");
-   if( !SetDefaults )
-      goto Exit;
-
    FlowdockStartListeningDefaultsFunc Listen = (FlowdockStartListeningDefaultsFunc)m_libraryFlowdock.Resolve("FlowdockStartListeningDefaults");
    FlowdockAddListenFlowFunc AddListen = (FlowdockAddListenFlowFunc)m_libraryFlowdock.Resolve("FlowdockAddListenFlow");
 
+   FlowdockGetFlowsFunc GetFlows = (FlowdockGetFlowsFunc)m_libraryFlowdock.Resolve("FlowdockGetFlows");
+
+   FlowdockGetUsersFunc GetUsers = (FlowdockGetUsersFunc)m_libraryFlowdock.Resolve("FlowdockGetUsers");
+
+   if( !SetDefaults )
+      goto Exit;
+
    if( !CreateAPI )
+      goto Exit;
+
+   if( !GetFlows )
+      goto Exit;
+
+   if( !GetUsers )
       goto Exit;
 
    CreateAPI(&pFlowdock);
 
    SetDefaults(pFlowdock, strUsername.c_str(), strPassword.c_str());
-
-   FlowdockGetFlowsFunc GetFlows = (FlowdockGetFlowsFunc)m_libraryFlowdock.Resolve("FlowdockGetFlows");
-   if( !GetFlows )
-      goto Exit;
 
    GetFlows(pFlowdock, strUsername.c_str(), strPassword.c_str());
 
@@ -309,10 +315,6 @@ bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& 
       AddListen(pFlowdock, m_arrFlows[i].m_strOrg.c_str(), m_arrFlows[i].m_strFlow.c_str());
 
       //TODO: Can we make this better?
-      FlowdockGetUsersFunc GetUsers = (FlowdockGetUsersFunc)m_libraryFlowdock.Resolve("FlowdockGetUsers");
-      if( !GetUsers )
-         goto Exit;
-
       GetUsers(pFlowdock, m_arrFlows[i].m_strOrg.c_str(), m_arrFlows[i].m_strFlow.c_str(), strUsername.c_str(), strPassword.c_str());
    }
 
