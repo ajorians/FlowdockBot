@@ -74,7 +74,7 @@ HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrO
 		   std::string strImg = sc.GetImageURL(arrstrLinks[i]);
 		   if( strImg.size() > 0 )
 		   {
-			   pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strImg.c_str(), "SC");
+			   pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strImg.c_str(), "");
 		   }
 	   }
    }
