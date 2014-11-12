@@ -31,6 +31,23 @@ CommandProcessor::CommandProcessor(ConnectionManager* pConnectionManager)
 
 }
 
+void CommandProcessor::ParseCommandLine(int argc, char *argv[])
+{
+   for(int i=0; i<argc; i++)
+   {
+      std::string str = argv[i];
+
+      if( str == "--join" )
+         m_pConnectionManager->JoinRoom(Flowdock_ORG, argv[i+1]);
+
+      if( str == "--reload" )
+         m_pConnectionManager->ReloadChatHandlers();
+
+      if( str == "--connect" )
+         m_pConnectionManager->Connect(Flowdock_USERNAME, Flowdock_PASSWORD);
+   }
+}
+
 void CommandProcessor::Run()
 {
    DisplayHelp();

@@ -15,7 +15,11 @@ int main(int argc, char *argv[])
    {
       ConnectionManager connections;
 
-      CommandProcessor(&connections).Run();
+      CommandProcessor commandProcessor(&connections);
+
+      commandProcessor.ParseCommandLine(argc, argv);
+
+      commandProcessor.Run();
    }
 
    cout << "Exiting FlowdockBot" << endl;

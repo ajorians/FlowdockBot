@@ -8,6 +8,7 @@ class CommandProcessor
 public:
    CommandProcessor(ConnectionManager* pConnectionManager);
 
+   void ParseCommandLine(int argc, char *argv[]);
    void Run();
 
 protected:
