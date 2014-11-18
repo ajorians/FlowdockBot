@@ -309,8 +309,7 @@ bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& 
 
    SetDefaults(pFlowdock, strUsername.c_str(), strPassword.c_str());
 
-   int nFlowsWorked = GetFlows(pFlowdock, strUsername.c_str(), strPassword.c_str());
-   if( nFlowsWorked == 0 ) {
+   if( GetFlows(pFlowdock, strUsername.c_str(), strPassword.c_str()) == 0 ) {
       std::cout << "Problem getting flows!!!!  Exiting!!!" << std::endl;
       goto Exit;
    }
