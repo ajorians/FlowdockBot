@@ -309,7 +309,11 @@ bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& 
 
    SetDefaults(pFlowdock, strUsername.c_str(), strPassword.c_str());
 
-   GetFlows(pFlowdock, strUsername.c_str(), strPassword.c_str());
+   int nFlowsWorked = GetFlows(pFlowdock, strUsername.c_str(), strPassword.c_str());
+   if( nFlowsWorked == 0 ) {
+      std::cout << "Problem getting flows!!!!  Exiting!!!" << std::endl;
+      goto Exit;
+   }
 
    for(std::vector<FlowdockFlowInfo>::size_type i=0; i<m_arrFlows.size(); i++) {
       AddListen(pFlowdock, m_arrFlows[i].m_strOrg.c_str(), m_arrFlows[i].m_strFlow.c_str());
