@@ -220,6 +220,7 @@ void FlowdockManager::GetListenMessages()
    FlowdockGetListenMessageTypeFunc GetMessageType = (FlowdockGetListenMessageTypeFunc)m_libraryFlowdock.Resolve("FlowdockGetListenMessageType");
    FlowdockGetMessageContentFunc GetMessageContent = (FlowdockGetMessageContentFunc)m_libraryFlowdock.Resolve("FlowdockGetMessageContent");
    FlowdockRemoveListenMessageFunc RemoveMessage = (FlowdockRemoveListenMessageFunc)m_libraryFlowdock.Resolve("FlowdockRemoveListenMessage");
+   FlowdockGetMessageIDFunc GetMessageID = (FlowdockGetMessageIDFunc)m_libraryFlowdock.Resolve("FlowdockGetMessageID");
 
    while(GetMessagesCount(m_FlowdockInstance) > 0 )
    {
@@ -258,7 +259,10 @@ void FlowdockManager::GetListenMessages()
 
             delete pstrFlow;
 
-            m_pManager->MessageSaid(Flowdock_ORG, strFlowName, 0/*type*/, 0/*userid*/, pstrBuffer);
+            int nMessageID = -1;
+            GetMessageID(m_FlowdockInstance, 0, nMessageID);
+
+            m_pManager->MessageSaid(Flowdock_ORG, strFlowName, 0/*type*/, 0/*userid*/, pstrBuffer, nMessageID);
          }
 
          delete[] pstrBuffer;

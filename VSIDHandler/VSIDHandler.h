@@ -14,7 +14,7 @@ public:
    static std::vector<int> VSIDsFromMessage(const std::string& strMessage);
    static bool HasVSID(const std::string& strMessage);
 
-   void PostResponseMessage(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage);
+   void PostResponseMessage(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, int nMessageID);
 
 protected:
 	static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream);

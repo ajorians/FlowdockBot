@@ -74,13 +74,13 @@ void ConnectionManager::UploadMessage(const char* pstrOrg, const char* pstrRoom,
    m_arrQueuedMessages.push_back(msg);
 }
 
-void ConnectionManager::MessageSaid(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage)
+void ConnectionManager::MessageSaid(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage, int nMessageID)
 {
    //called from a different thread
    pthread_mutex_lock( &m_mutex );
 
    //Notify chat handlers of this message
-   NotifyHandlers(strOrg, strFlow, nType, nUserID, strMessage);
+   NotifyHandlers(strOrg, strFlow, nType, nUserID, strMessage, nMessageID);
 
    pthread_mutex_unlock( &m_mutex );
 
@@ -376,7 +376,7 @@ bool ConnectionManager::Rejoin(const std::string& strUsername, const std::string
    return true;
 }
 
-void ConnectionManager::NotifyHandlers(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage)
+void ConnectionManager::NotifyHandlers(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage, int nMessageID)
 {
    for(std::vector<RLibrary*>::size_type i = 0; i<m_arrChatHandlers.size(); i++)
    {
@@ -384,7 +384,7 @@ void ConnectionManager::NotifyHandlers(const std::string& strOrg, const std::str
       if( !Said )
          continue;
 
-      Said(this, strOrg.c_str(), strFlow.c_str(), nType, nUserID, strMessage.c_str());
+      Said(this, strOrg.c_str(), strFlow.c_str(), nType, nUserID, strMessage.c_str(), nMessageID);
    }
 }
 

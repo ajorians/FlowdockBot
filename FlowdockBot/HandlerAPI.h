@@ -16,8 +16,8 @@ public:
 #define HANDLER_EXTERN extern "C"
 #endif
 
-typedef int (*HandlerMessageSaidFunc)(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage);
+typedef int (*HandlerMessageSaidFunc)(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage, int nMessageID);
 
-HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage);
+HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage, int nMessageID);
 
 #endif

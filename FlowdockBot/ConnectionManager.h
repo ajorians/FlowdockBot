@@ -25,7 +25,7 @@ class FlowdockManager;
 class IManager
 {
 public:
-   virtual void MessageSaid(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage)  = 0;
+   virtual void MessageSaid(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage, int nMessageID)  = 0;
 };
 
 class ConnectionManager : public IHandler, public IManager
@@ -39,7 +39,7 @@ public:
    void UploadMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrFile);
 
    //IManager
-   void MessageSaid(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage);
+   void MessageSaid(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage, int nMessageID);
 
    //Commands
    void Exit();
@@ -82,7 +82,7 @@ protected:
 
    bool Rejoin(const std::string& strUsername, const std::string& strPassword);
 
-   void NotifyHandlers(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage);
+   void NotifyHandlers(const std::string& strOrg, const std::string& strFlow, int nType, int nUserID, const std::string& strMessage, int nMessageID);
 
 protected:
    pthread_t m_thread;

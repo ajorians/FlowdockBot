@@ -43,7 +43,7 @@ std::string UnEscapeXML(const std::string str)
    return strReturn;
 }
 
-HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage)
+HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrOrg, const char* pstrFlow, int nType, int nUserID, const char* pstrMessage, int nMessageID)
 {
    IHandler* pIHandler = (IHandler*)pIFlowdockManager;
    std::string strMessage(pstrMessage), strOrg(pstrOrg), strFlow(pstrFlow);
@@ -51,7 +51,7 @@ HANDLER_EXTERN int HandlerMessageSaid(void* pIFlowdockManager, const char* pstrO
    if( VSIDHandler::HasVSID(strMessage) )
    {
       VSIDHandler vsid(pIHandler);
-      vsid.PostResponseMessage(strOrg, strFlow, strMessage);
+      vsid.PostResponseMessage(strOrg, strFlow, strMessage, nMessageID);
    }
 
    return 0;
@@ -113,7 +113,7 @@ bool VSIDHandler::HasVSID(const std::string& strMessage)
    return VSIDsFromMessage(strMessage).size() > 0;
 }
 
-void VSIDHandler::PostResponseMessage(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage)
+void VSIDHandler::PostResponseMessage(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, int nMessageID)
 {
    std::vector<int> arrVSIDs = VSIDsFromMessage(strMessage);
    if( arrVSIDs.size() <= 0 )
@@ -124,7 +124,7 @@ void VSIDHandler::PostResponseMessage(const std::string& strOrg, const std::stri
       std::string strResponse = GetResponseForVSID(arrVSIDs[i]);
 
       if( strResponse.length() > 0 )
-         m_pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strResponse.c_str(), -1/*CommentTo*/, "VSID");
+         m_pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strResponse.c_str(), nMessageID/*CommentTo*/, "VSID");
    }
 }
 
@@ -144,7 +144,7 @@ std::string VSIDHandler::GetResponseForVSID(int nID)
    curl_easy_setopt(m_pCurl, CURLOPT_URL, strAddress.c_str());
 
    curl_easy_setopt(m_pCurl, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
-   std::string strUserPasswd = "a.orians:Aa2.718281828";
+   std::string strUserPasswd = "a.orians:!Q@W3e4r";
    curl_easy_setopt(m_pCurl, CURLOPT_USERPWD, strUserPasswd.c_str());
 
    m_strWrite.clear();
