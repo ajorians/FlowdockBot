@@ -124,7 +124,7 @@ void VSIDHandler::PostResponseMessage(const std::string& strOrg, const std::stri
       std::string strResponse = GetResponseForVSID(arrVSIDs[i]);
 
       if( strResponse.length() > 0 )
-         m_pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strResponse.c_str(), "VSID");
+         m_pIHandler->SayMessage(strOrg.c_str(), strFlow.c_str(), strResponse.c_str(), -1/*CommentTo*/, "VSID");
    }
 }
 

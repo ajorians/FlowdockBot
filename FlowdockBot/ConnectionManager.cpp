@@ -44,7 +44,7 @@ ConnectionManager::~ConnectionManager()
    Exit();
 }
 
-void ConnectionManager::SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage, const char* pstrTags)
+void ConnectionManager::SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage, int nCommentTo, const char* pstrTags)
 {
    std::string strOrg(pstrOrg), strRoom(pstrRoom), strMessage(pstrMessage), strTags(pstrTags), strExternalUser("build_bot");
 
@@ -53,6 +53,7 @@ void ConnectionManager::SayMessage(const char* pstrOrg, const char* pstrRoom, co
    msg.m_strOrg = strOrg;
    msg.m_strFlow = strRoom;
    msg.m_strMessage = strMessage;
+   msg.m_nCommentTo = nCommentTo;
    msg.m_strTags = strTags;
    msg.m_strExternalUser = strExternalUser;
 
@@ -68,6 +69,7 @@ void ConnectionManager::UploadMessage(const char* pstrOrg, const char* pstrRoom,
    msg.m_strOrg = strOrg;
    msg.m_strFlow = strRoom;
    msg.m_strMessage = strFile;
+   msg.m_nCommentTo = -1;//TODO: Perhaps allow comment to.
 
    m_arrQueuedMessages.push_back(msg);
 }
@@ -168,11 +170,11 @@ bool ConnectionManager::Connect(const std::string& strUsername, const std::strin
    return bOK;
 }
 
-bool ConnectionManager::Say(const std::string& strOrg, const std::string& strRoom, const std::string& strMessage)
+bool ConnectionManager::Say(const std::string& strOrg, const std::string& strRoom, const std::string& strMessage, int nCommentTo)
 {
    pthread_mutex_lock( &m_mutex );
 
-   SayMessage(strOrg.c_str(), strRoom.c_str(), strMessage.c_str(), "");
+   SayMessage(strOrg.c_str(), strRoom.c_str(), strMessage.c_str(), nCommentTo, "");
    pthread_mutex_unlock( &m_mutex );
 
    return true;
@@ -272,7 +274,7 @@ void ConnectionManager::DoQueuedMessages()
       }
       else if( msg.m_eType == QueuedMessage::SayMessage )
       {
-         m_pFlowdockManager->Say(msg.m_strOrg, msg.m_strFlow, msg.m_strMessage, msg.m_strTags, msg.m_strExternalUser);
+         m_pFlowdockManager->Say(msg.m_strOrg, msg.m_strFlow, msg.m_strMessage, msg.m_nCommentTo, msg.m_strTags, msg.m_strExternalUser);
       }
       else if( msg.m_eType == QueuedMessage::UploadFile )
       {

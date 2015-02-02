@@ -89,13 +89,14 @@ void FlowdockManager::Exit()
    }
 }
 
-bool FlowdockManager::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, const std::string& strTags, const std::string& strExternalUser)
+bool FlowdockManager::Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, int nCommentTo, const std::string& strTags, const std::string& strExternalUser)
 {
    FlowdockQueuedMessage msg;
    msg.m_eType = FlowdockQueuedMessage::SayMessage;
    msg.m_strOrg = strOrg;
    msg.m_strFlow = strFlow;
    msg.m_strMessage = strMessage;
+   msg.m_nCommentTo = nCommentTo;
    msg.m_strTags = strTags;
    msg.m_strExternalUser = strExternalUser;
 
@@ -179,7 +180,7 @@ void FlowdockManager::DoQueuedMessages()
          {
             std::string strTemp = URLEncode(msg.m_strMessage);
             int nMessageID = -1;
-            Say(m_FlowdockInstance, msg.m_strOrg.c_str(), msg.m_strFlow.c_str(), strTemp.c_str(), msg.m_strTags.c_str(), msg.m_strExternalUser.c_str());
+            Say(m_FlowdockInstance, msg.m_strOrg.c_str(), msg.m_strFlow.c_str(), strTemp.c_str(), msg.m_nCommentTo, msg.m_strTags.c_str(), msg.m_strExternalUser.c_str());
          }
       }
       else if( msg.m_eType == FlowdockQueuedMessage::UploadFile )

@@ -140,7 +140,7 @@ void CommandProcessor::Run()
          string strRoom = Trim(strMessage.substr(0, nPos));
          strMessage = Trim(strMessage.substr(nPos+1));
 
-         m_pConnectionManager->Say(Flowdock_ORG, strRoom, strMessage);
+         m_pConnectionManager->Say(Flowdock_ORG, strRoom, strMessage, -1/*CommentTo*/);
       }
 
 #ifndef _WIN32

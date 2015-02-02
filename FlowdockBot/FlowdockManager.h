@@ -34,7 +34,7 @@ public:
    void Exit();
    bool AddFlow(const std::string& strOrg, const std::string& strFlow);
    bool Connect(const std::string& strUsername, const std::string& strPassword);
-   bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, const std::string& strTags, const std::string& strExternalUser);
+   bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, int nCommentTo, const std::string& strTags, const std::string& strExternalUser);
    bool Upload(const std::string& strRoom, const std::string& strFile);
    bool ChangeUpdateFrequency(int nMS);
 
@@ -52,6 +52,7 @@ public:
       std::string m_strFlow;
       std::string m_strUsername;
       std::string m_strPassword;
+      int m_nCommentTo;
       std::string m_strTags;
       std::string m_strExternalUser;
    };

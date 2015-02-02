@@ -35,7 +35,7 @@ public:
    ~ConnectionManager();
 
    //IHandler
-   void SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage, const char* pstrTags);
+   void SayMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrMessage, int nCommentTo, const char* pstrTags);
    void UploadMessage(const char* pstrOrg, const char* pstrRoom, const char* pstrFile);
 
    //IManager
@@ -48,7 +48,7 @@ public:
    void ToggleDebugMessages();
    bool JoinRoom(const std::string& strOrg, const std::string& strFlow);
    bool Connect(const std::string& strUsername, const std::string& strPassword);
-   bool Say(const std::string& strOrg, const std::string& strRoom, const std::string& strMessage);
+   bool Say(const std::string& strOrg, const std::string& strRoom, const std::string& strMessage, int nCommentTo);
    bool ChangeUpdateFrequency(int nMS);
 
    bool GetResponce(std::string& strResponse);
@@ -62,6 +62,7 @@ public:
       std::string m_strOrg;
       std::string m_strFlow;
       std::string m_strMessage;
+      int m_nCommentTo;
       std::string m_strTags;
       std::string m_strExternalUser;
 
