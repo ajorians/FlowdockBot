@@ -224,7 +224,8 @@ void FlowdockManager::GetListenMessages()
 
    while(GetMessagesCount(m_FlowdockInstance) > 0 )
    {
-      if( GetMessageType(m_FlowdockInstance, 0) == 0 ) {
+      int nMessageType = GetMessageType(m_FlowdockInstance, 0);
+      if( nMessageType == 0/*Message*/ || nMessageType == 1/*Comment*/ ) {
          char* pstrBuffer = NULL;
          int nSizeOfMessage = 0;
 
