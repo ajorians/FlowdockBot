@@ -27,7 +27,7 @@ ADD_EXECUTABLE(FlowdockBot ${SOURCE_FILES} ${HEADERS} )
 IF(WIN32)
    SET( OSSPECIFIC_LIBRARIES Htmlhelp ws2_32.lib winmm.lib wldap32.lib pthreadVC2.lib )
 ELSEIF(UNIX)
-   SET( OSSPECIFIC_LIBRARIES pthread )
+   SET( OSSPECIFIC_LIBRARIES pthread dl )
 ENDIF(WIN32)
 
 ADD_DEPENDENCIES(FlowdockBot ScreencastLinkHandler VSIDHandler)
