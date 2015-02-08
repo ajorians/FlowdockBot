@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <cstring>
 
+#include <iostream>
+using namespace std;
+
 int StringToInt(const std::string& str)
 {
    return atoi(str.c_str());
@@ -37,7 +40,6 @@ void Replace(std::string& s, const std::string& strToReplace, const std::string&
       s.replace(nPos, strToReplace.length(), strToReplaceWith);
       nPos += strToReplaceWith.length();
    }
-
 }
 
 std::string UnEscapeXML(const std::string str)
@@ -116,6 +118,7 @@ bool ScreencastLinkHandler::HasSCLink(const std::string& strMessage)
 
 std::vector<std::string> ScreencastLinkHandler::SCLinksFromMessage(const std::string& strMessage)
 {
+        cout << "Message is: " << strMessage << endl;
 	std::vector<std::string> arrstrURLs;
 	std::string strLower = ToLower( strMessage );
 
@@ -124,7 +127,10 @@ std::vector<std::string> ScreencastLinkHandler::SCLinksFromMessage(const std::st
 	{
 		int nStartShortID = strLower.find("screencast.com/t/", nStart);
 		if( nStartShortID == std::string::npos )
+                {
+                        cout << "not found screencast.com/t/ in: " << strLower << endl;
 			break;
+                }
 
 		nStart = nStartShortID + strlen("screencast.com/t/");
 
