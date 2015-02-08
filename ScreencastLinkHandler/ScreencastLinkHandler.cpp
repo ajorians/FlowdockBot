@@ -175,15 +175,15 @@ std::string ScreencastLinkHandler::GetImageURL(const std::string& strURL)
    int nStart = 0;
    while(true)
    {
-	   int nStartImg = m_strWrite.find("<img ", nStart);
+	   int nStartImg = m_strWrite.find("<img", nStart);
 	   if( nStartImg == std::string::npos )
 		   break;
 
-	   int nEndImg = m_strWrite.find(">", nStartImg + strlen("<img "));
+	   int nEndImg = m_strWrite.find(">", nStartImg + strlen("<img"));
 	   if( nEndImg == std::string::npos )
 		   break;
 
-	   nStart = nStartImg + strlen("<img ");
+	   nStart = nStartImg + strlen("<img");
 
 	   std::string strImgTag = m_strWrite.substr(nStartImg, nEndImg - nStartImg);
 	   if( strImgTag.find("embeddedObject") == std::string::npos )
