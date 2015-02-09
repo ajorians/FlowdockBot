@@ -45,6 +45,9 @@ void CommandProcessor::ParseCommandLine(int argc, char *argv[])
 
       if( str == "--connect" )
          m_pConnectionManager->Connect(Flowdock_USERNAME, Flowdock_PASSWORD);
+
+      if( str == "--verbose" )
+         m_pConnectionManager->SetVerbose();
    }
 }
 

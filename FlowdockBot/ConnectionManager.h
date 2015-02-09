@@ -48,6 +48,7 @@ public:
    void ToggleDebugMessages();
    bool JoinRoom(const std::string& strOrg, const std::string& strFlow);
    bool Connect(const std::string& strUsername, const std::string& strPassword);
+   bool SetVerbose();
    bool Say(const std::string& strOrg, const std::string& strRoom, const std::string& strMessage, int nCommentTo);
    bool ChangeUpdateFrequency(int nMS);
 
@@ -62,6 +63,7 @@ public:
       std::string m_strOrg;
       std::string m_strFlow;
       std::string m_strMessage;
+      bool m_bVerbose;
       int m_nCommentTo;
       std::string m_strTags;
       std::string m_strExternalUser;
@@ -88,6 +90,8 @@ protected:
    pthread_t m_thread;
    pthread_mutex_t m_mutex;
    bool m_bExit;
+
+   bool m_bVerbose;
 
    std::vector<QueuedMessage> m_arrQueuedMessages;
 

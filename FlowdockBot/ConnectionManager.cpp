@@ -27,7 +27,7 @@ ConnectionManager::ConnectionManager()
 m_mutex(PTHREAD_MUTEX_INITIALIZER),
 m_mutexResponses(PTHREAD_MUTEX_INITIALIZER),
 #endif
-m_bExit(false), m_bDebugFlowdockMessages(false)
+m_bExit(false), m_bVerbose(false), m_bDebugFlowdockMessages(false)
 {
 #ifndef WIN32
    pthread_mutex_init(&m_mutex, NULL);
@@ -170,6 +170,13 @@ bool ConnectionManager::Connect(const std::string& strUsername, const std::strin
    return bOK;
 }
 
+bool ConnectionManager::SetVerbose()
+{
+   m_bVerbose = true;
+
+   return true;
+}
+
 bool ConnectionManager::Say(const std::string& strOrg, const std::string& strRoom, const std::string& strMessage, int nCommentTo)
 {
    pthread_mutex_lock( &m_mutex );
@@ -270,7 +277,7 @@ void ConnectionManager::DoQueuedMessages()
       }
       else if( msg.m_eType == QueuedMessage::RestartCamp )
       {
-         m_pFlowdockManager->Connect(msg.strUsername, msg.strPassword);
+         m_pFlowdockManager->Connect(msg.strUsername, msg.strPassword, msg.m_bVerbose);
       }
       else if( msg.m_eType == QueuedMessage::SayMessage )
       {
@@ -368,6 +375,7 @@ bool ConnectionManager::Rejoin(const std::string& strUsername, const std::string
    msg.m_eType = QueuedMessage::RestartCamp;
    msg.strUsername = strUsername;
    msg.strPassword = strPassword;
+   msg.m_bVerbose = m_bVerbose;
 
    pthread_mutex_lock( &m_mutex );
    m_arrQueuedMessages.push_back(msg);

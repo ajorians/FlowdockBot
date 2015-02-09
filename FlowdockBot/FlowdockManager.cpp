@@ -279,12 +279,12 @@ bool FlowdockManager::AddFlow(const std::string& strOrg, const std::string& strF
    return true;
 }
 
-bool FlowdockManager::Connect(const std::string& strUsername, const std::string& strPassword)
+bool FlowdockManager::Connect(const std::string& strUsername, const std::string& strPassword, bool bVerbose)
 {
-   return Rejoin(strUsername, strPassword);
+   return Rejoin(strUsername, strPassword, bVerbose);
 }
 
-bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& strPassword)
+bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& strPassword, bool bVerbose)
 {
    bool bOK = false;
 
@@ -311,7 +311,7 @@ bool FlowdockManager::Rejoin(const std::string& strUsername, const std::string& 
    if( !GetUsers )
       goto Exit;
 
-   CreateAPI(&pFlowdock);
+   CreateAPI(&pFlowdock, bVerbose?1:0);
 
    SetDefaults(pFlowdock, strUsername.c_str(), strPassword.c_str());
 

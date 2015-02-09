@@ -33,7 +33,7 @@ public:
    //Commands
    void Exit();
    bool AddFlow(const std::string& strOrg, const std::string& strFlow);
-   bool Connect(const std::string& strUsername, const std::string& strPassword);
+   bool Connect(const std::string& strUsername, const std::string& strPassword, bool bVerbose);
    bool Say(const std::string& strOrg, const std::string& strFlow, const std::string& strMessage, int nCommentTo, const std::string& strTags, const std::string& strExternalUser);
    bool Upload(const std::string& strRoom, const std::string& strFile);
    bool ChangeUpdateFrequency(int nMS);
@@ -64,7 +64,7 @@ protected:
    void DoQueuedMessages();
    void GetListenMessages();
 
-   bool Rejoin(const std::string& strUsername, const std::string& strPassword);
+   bool Rejoin(const std::string& strUsername, const std::string& strPassword, bool bVerbose);
 
 protected:
    pthread_t m_thread;
